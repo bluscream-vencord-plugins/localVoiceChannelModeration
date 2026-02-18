@@ -100,7 +100,7 @@ const restoreAll = (reason: EndReason = "left") => {
 };
 
 export default definePlugin({
-    name: "Local Voice Channel Moderation",
+    name: pluginInfo.name,
     description: pluginInfo.description,
     authors: pluginInfo.authors,
     settings,
