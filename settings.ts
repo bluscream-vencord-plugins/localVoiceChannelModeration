@@ -7,16 +7,22 @@ export const settings = definePluginSettings({
         description: "Volume level for joining users (0-200%).",
         default: 50,
         markers: [0, 10, 20, 25, 30, 40, 50, 75, 100, 150, 200],
-        stickToMarkers: true,
+        stickToMarkers: false,
         restartNeeded: false,
+        onChange: (v) => {
+            if (typeof v === "number") settings.store.duration = Math.round(v);
+        },
     },
     duration: {
         type: OptionType.SLIDER,
         description: "Seconds to keep volume lowered (0 for infinite).",
         default: 30,
-        markers: [0, 15, 30, 60, 120, 300],
+        markers: [0, 5, 15, 30, 60, 120, 300, 600],
         stickToMarkers: false,
         restartNeeded: false,
+        onChange: (v) => {
+            if (typeof v === "number") settings.store.duration = Math.round(v);
+        },
     },
     localUserWhitelist: {
         type: OptionType.STRING,
