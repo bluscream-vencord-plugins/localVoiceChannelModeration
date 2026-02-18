@@ -8,6 +8,9 @@ const logger = new Logger(pluginInfo.id, pluginInfo.color);
 const activeModerations = new Map<string, { originalVolume: number; timeoutId?: any; targetVolume: number; }>();
 const usersInMyChannel = new Set<string>();
 
+const scaleVolume = (v: number) => Math.pow(v / 100, 3) * 100;
+const unscaleVolume = (v: number) => Math.pow(v / 100, 1 / 3) * 100;
+
 const setVolume = (userId: string, volume: number) => {
     const { VoiceActions } = require("@webpack/common");
     if (VoiceActions?.setLocalVolume) {
@@ -47,14 +50,23 @@ const moderateUser = (userId: string) => {
     }
 
     const currentVolume = MediaEngineStore.getLocalVolume(userId, "default") ?? 100;
-    if (settings.store.skipCustomVolume && currentVolume !== 100) {
-        sendEphemeral("msgModerateSkip", { user_id: userId, reason: `Custom Volume (${Math.round(currentVolume)}%)` });
+    const currentDisplayVolume = unscaleVolume(currentVolume);
+
+    if (settings.store.skipCustomVolume && Math.round(currentDisplayVolume) !== 100) {
+        sendEphemeral("msgModerateSkip", { user_id: userId, reason: `Custom Volume (${Math.round(currentDisplayVolume)}%)` });
         return;
     }
 
-    const { targetVolume, duration } = settings.store;
-    logger.info(`Moderating ${userId}: ${currentVolume}% -> ${targetVolume}% (${duration}s)`);
-    sendEphemeral("msgModerate", { user_id: userId, old_volume: Math.round(currentVolume), new_volume: targetVolume, duration });
+    const { targetVolume: targetDisplayVolume, duration } = settings.store;
+    const targetVolume = scaleVolume(targetDisplayVolume);
+
+    logger.info(`Moderating ${userId}: ${Math.round(currentDisplayVolume)}% -> ${targetDisplayVolume}% (${duration}s)`);
+    sendEphemeral("msgModerate", {
+        user_id: userId,
+        old_volume: Math.round(currentDisplayVolume),
+        new_volume: targetDisplayVolume,
+        duration
+    });
 
     setVolume(userId, targetVolume);
 
@@ -75,7 +87,7 @@ const endModeration = (userId: string, reason: EndReason) => {
     activeModerations.delete(userId);
 
     if (reason === "restore") {
-        const vol = Math.round(state.originalVolume);
+        const vol = Math.round(unscaleVolume(state.originalVolume));
         sendEphemeral("msgModerateEnd", { user_id: userId, reason: `Volume restored to ${vol}%` });
         setVolume(userId, state.originalVolume);
     } else if (reason !== "stop") {
@@ -126,13 +138,29 @@ export default definePlugin({
     },
     commands: [
         {
+            name: "vd-volume-list",
+            description: "List all users you have set a custom volume for",
+            execute: (_, ctx) => {
+                const users = UserStore.getUsers();
+                const custom: string[] = [];
+                for (const id in users) {
+                    const vol = MediaEngineStore.getLocalVolume(id, "default");
+                    if (Math.round(unscaleVolume(vol)) !== 100) {
+                        custom.push(`• <@${id}>: ${Math.round(unscaleVolume(vol))}%`);
+                    }
+                }
+                const { sendBotMessage } = require("@api/Commands");
+                sendBotMessage(ctx.channel.id, { content: custom.length ? `**Custom Volumes:**\n${custom.join("\n")}` : "No custom volumes." });
+            }
+        },
+        {
             name: "vd-volume-reset-all",
             description: "Reset all custom volumes to 100%",
             execute: (_, ctx) => {
                 const users = UserStore.getUsers();
                 let count = 0;
                 for (const id in users) {
-                    if (MediaEngineStore.getLocalVolume(id, "default") !== 100) {
+                    if (Math.round(unscaleVolume(MediaEngineStore.getLocalVolume(id, "default"))) !== 100) {
                         setVolume(id, 100);
                         count++;
                     }
