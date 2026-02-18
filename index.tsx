@@ -119,6 +119,12 @@ export default definePlugin({
             label="Enable Messages"
             checked={settings.store.ephemeralMessagesEnabled}
             action={() => settings.store.ephemeralMessagesEnabled = !settings.store.ephemeralMessagesEnabled}
+        />,
+        <Menu.MenuCheckboxItem
+            id="vc-local-voice-mod-mod-on-join"
+            label="Moderate on Join"
+            checked={settings.store.modOnChannelJoin}
+            action={() => settings.store.modOnChannelJoin = !settings.store.modOnChannelJoin}
         />
     ],
     userContextActions: (user) => {
@@ -197,7 +203,7 @@ export default definePlugin({
                         for (const id of Object.keys(players)) {
                             if (id !== me.id) {
                                 usersInMyChannel.add(id);
-                                moderateUser(id);
+                                if (settings.store.modOnChannelJoin) moderateUser(id);
                             }
                         }
                     }
@@ -235,7 +241,7 @@ export default definePlugin({
             for (const id of Object.keys(players)) {
                 if (id !== mid) {
                     usersInMyChannel.add(id);
-                    moderateUser(id);
+                    if (settings.store.modOnChannelJoin) moderateUser(id);
                 }
             }
         }

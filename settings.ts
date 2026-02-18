@@ -11,9 +11,11 @@ export const settings = definePluginSettings({
         restartNeeded: false,
     },
     duration: {
-        type: OptionType.NUMBER,
+        type: OptionType.SLIDER,
         description: "Seconds to keep volume lowered (0 for infinite).",
         default: 30,
+        markers: [0, 15, 30, 60, 120, 300],
+        stickToMarkers: false,
         restartNeeded: false,
     },
     localUserWhitelist: {
@@ -21,6 +23,12 @@ export const settings = definePluginSettings({
         description: "User IDs to never moderate (one per line).",
         default: "",
         multiline: true,
+        restartNeeded: false,
+    },
+    modOnChannelJoin: {
+        type: OptionType.BOOLEAN,
+        description: "Wether to moderate all users when joining a channel",
+        default: false,
         restartNeeded: false,
     },
     skipFriends: {
