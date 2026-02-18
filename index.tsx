@@ -138,35 +138,44 @@ export default definePlugin({
     },
     commands: [
         {
-            name: "vd-volume-list",
-            description: "List all users you have set a custom volume for",
-            execute: (_, ctx) => {
-                const users = UserStore.getUsers();
-                const custom: string[] = [];
-                for (const id in users) {
-                    const vol = MediaEngineStore.getLocalVolume(id, "default");
-                    if (Math.round(unscaleVolume(vol)) !== 100) {
-                        custom.push(`• <@${id}>: ${Math.round(unscaleVolume(vol))}%`);
-                    }
+            name: "volume",
+            description: "Voice moderation volume commands",
+            options: [
+                {
+                    name: "list",
+                    description: "List all users you have set a custom volume for",
+                    type: 1, // ApplicationCommandOptionType.SUB_COMMAND
+                },
+                {
+                    name: "reset",
+                    description: "Reset all custom volumes to 100%",
+                    type: 1, // ApplicationCommandOptionType.SUB_COMMAND
                 }
-                const { sendBotMessage } = require("@api/Commands");
-                sendBotMessage(ctx.channel.id, { content: custom.length ? `**Custom Volumes:**\n${custom.join("\n")}` : "No custom volumes." });
-            }
-        },
-        {
-            name: "vd-volume-reset-all",
-            description: "Reset all custom volumes to 100%",
-            execute: (_, ctx) => {
+            ],
+            execute: (args, ctx) => {
+                const { findOption, sendBotMessage } = require("@api/Commands");
+                const subCommand = args[0].name;
                 const users = UserStore.getUsers();
-                let count = 0;
-                for (const id in users) {
-                    if (Math.round(unscaleVolume(MediaEngineStore.getLocalVolume(id, "default"))) !== 100) {
-                        setVolume(id, 100);
-                        count++;
+
+                if (subCommand === "list") {
+                    const custom: string[] = [];
+                    for (const id in users) {
+                        const vol = MediaEngineStore.getLocalVolume(id, "default");
+                        if (Math.round(unscaleVolume(vol)) !== 100) {
+                            custom.push(`• <@${id}>: ${Math.round(unscaleVolume(vol))}%`);
+                        }
                     }
+                    sendBotMessage(ctx.channel.id, { content: custom.length ? `**Custom Volumes:**\n${custom.join("\n")}` : "No custom volumes." });
+                } else if (subCommand === "reset") {
+                    let count = 0;
+                    for (const id in users) {
+                        if (Math.round(unscaleVolume(MediaEngineStore.getLocalVolume(id, "default"))) !== 100) {
+                            setVolume(id, 100);
+                            count++;
+                        }
+                    }
+                    sendBotMessage(ctx.channel.id, { content: count ? `✅ Reset ${count} volumes.` : "ℹ️ No volumes to reset." });
                 }
-                const { sendBotMessage } = require("@api/Commands");
-                sendBotMessage(ctx.channel.id, { content: count ? `✅ Reset ${count} volumes.` : "ℹ️ No volumes to reset." });
             }
         }
     ],
