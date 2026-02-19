@@ -92,12 +92,13 @@ const endModeration = (userId: string, reason: EndReason) => {
     if (state.timeoutId) clearTimeout(state.timeoutId);
     activeModerations.delete(userId);
 
-    if (reason === "restore") {
+    if (reason === "restore" || reason === "left") {
         const vol = Math.round(unscaleVolume(state.originalVolume));
-        sendEphemeral("msgModerateEnd", { user_id: userId, reason: `Volume restored to ${vol}%` });
+        const reasonText = reason === "restore" ? "Time expired" : "User left";
+        sendEphemeral("msgModerateEnd", { user_id: userId, reason: `${reasonText} (Restored to ${vol}%)` });
         setVolume(userId, state.originalVolume);
-    } else if (reason !== "stop") {
-        sendEphemeral("msgModerateEnd", { user_id: userId, reason: reason === "manual" ? "Manual change" : "User left" });
+    } else if (reason === "manual") {
+        sendEphemeral("msgModerateEnd", { user_id: userId, reason: "Manual change" });
     }
 };
 
