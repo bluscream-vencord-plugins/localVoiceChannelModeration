@@ -24,6 +24,12 @@ export const settings = definePluginSettings({
             if (typeof v === "number") settings.store.duration = Math.round(v);
         },
     },
+    skipWhileDeafened: {
+        type: OptionType.BOOLEAN,
+        description: "Skip moderation while you are deafened.",
+        default: true,
+        restartNeeded: false,
+    },
     localUserWhitelist: {
         type: OptionType.STRING,
         description: "User IDs to never moderate (one per line).",

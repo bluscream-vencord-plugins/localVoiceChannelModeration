@@ -36,7 +36,13 @@ const sendEphemeral = (type: keyof typeof settings.store, vars: Record<string, s
 };
 
 const moderateUser = (userId: string) => {
-    if (!settings.store.pluginEnabled || activeModerations.has(userId) || userId === UserStore.getCurrentUser()?.id) return;
+    const me = UserStore.getCurrentUser();
+    if (!settings.store.pluginEnabled || activeModerations.has(userId) || userId === me?.id) return;
+
+    if (settings.store.skipWhileDeafened && me) {
+        const myState = VoiceStateStore.getVoiceStateForUser(me.id);
+        if (myState?.selfDeaf || myState?.deaf) return;
+    }
 
     const whitelist = (settings.store.localUserWhitelist || "").split(/\r?\n/).map(s => s.trim());
     if (whitelist.includes(userId)) {
@@ -125,6 +131,12 @@ export default definePlugin({
             label="Moderate on Join"
             checked={settings.store.modOnChannelJoin}
             action={() => settings.store.modOnChannelJoin = !settings.store.modOnChannelJoin}
+        />,
+        <Menu.MenuCheckboxItem
+            id="vc-local-voice-mod-skip-deafened"
+            label="Skip While Deafened"
+            checked={settings.store.skipWhileDeafened}
+            action={() => settings.store.skipWhileDeafened = !settings.store.skipWhileDeafened}
         />
     ],
     userContextActions: (user) => {
