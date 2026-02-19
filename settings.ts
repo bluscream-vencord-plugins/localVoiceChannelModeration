@@ -10,14 +10,14 @@ export const settings = definePluginSettings({
         stickToMarkers: false,
         restartNeeded: false,
         onChange: (v) => {
-            if (typeof v === "number") settings.store.duration = Math.round(v);
+            if (typeof v === "number") settings.store.targetVolume = Math.round(v);
         },
     },
     duration: {
         type: OptionType.SLIDER,
         description: "Seconds to keep volume lowered (0 for infinite).",
         default: 30,
-        markers: [0, 5, 15, 30, 60, 120, 300, 600],
+        markers: [0, 60, 120, 180, 240, 300, 360, 420, 480, 540, 600],
         stickToMarkers: false,
         restartNeeded: false,
         onChange: (v) => {
