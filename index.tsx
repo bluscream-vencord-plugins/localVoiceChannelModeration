@@ -8,8 +8,8 @@ const logger = new Logger(pluginInfo.id, pluginInfo.color);
 const activeModerations = new Map<string, { originalVolume: number; timeoutId?: any; targetVolume: number; }>();
 const usersInMyChannel = new Set<string>();
 
-const scaleVolume = (v: number) => Math.pow(v / 100, 3) * 100;
-const unscaleVolume = (v: number) => Math.pow(v / 100, 1 / 3) * 100;
+const scaleVolume = (v: number) => Math.round(Math.pow(v / 100, 3) * 100);
+const unscaleVolume = (v: number) => Math.round(Math.pow(v / 100, 1 / 3) * 100);
 
 const setVolume = (userId: string, volume: number) => {
     const { VoiceActions } = require("@webpack/common");
